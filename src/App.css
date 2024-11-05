@@ -11,3 +11,14 @@
 .PlayerRswp{
     background-color: #a3a3a3 !important;
 }
+
+.trends-item{
+    background-color: rgb(255, 255, 255,  10%);
+}
+
+.mucik-single{
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('./assets/images/singke.img.png');
+}

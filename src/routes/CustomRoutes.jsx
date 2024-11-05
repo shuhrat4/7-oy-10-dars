@@ -21,7 +21,7 @@ function CustomRoutes() {
         },
         {
             id: 4,
-            path: "/single",
+            path: "/mucik/:id",
             element: <Single />
         },
     ]

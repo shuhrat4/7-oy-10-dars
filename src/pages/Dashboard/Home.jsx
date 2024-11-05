@@ -1,75 +1,58 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useContext, useEffect, useState } from 'react';
 import { Context } from '../../context/Context';
+import Loading from "../../assets/images/loading.png";
+import MusicLists from '../../components/MusicLists';
 import SpotifyWebApi from 'spotify-web-api-node';
 import { CLIENT_ID } from '../../hook/useEnv';
-import SpotifyWebPlayer from 'react-spotify-web-playback';
+
+const LazyMusicLists = lazy(() => new Promise(resolve => {
+  return setTimeout(() => resolve(import("../../components/MusicLists")), 1000);
+}));
 
 function Home() {
   const { token } = useContext(Context);
-  const [tracksList, settarcksList] = useState([])
-
-  const [play, setplay] = useState([])
-  const [palying, setPlaying] = useState([])
-
   const spotifyApi = new SpotifyWebApi({
-    clientId: CLIENT_ID
-  })
-
-  useEffect(() => {
-    if (!token) return
-    spotifyApi.setAccessToken(token)
-  }, [token])
+    clientId: CLIENT_ID,
+  });
+  
+  const [trendMusicList, setTrendMusic] = useState([]);
 
   useEffect(() => {
     if (token) {
-      spotifyApi.searchTracks("Hamdam Sobirov ").then(res => {
-        settarcksList(res.body.tracks.items.map(item => {
-          const data = {
+      spotifyApi.setAccessToken(token); // token o'rnatish
+      spotifyApi.searchAlbums("Konsta")
+        .then(res => {
+          setTrendMusic(res.body.albums.items.slice(0, 6).map(item => ({
             id: item.id,
-            img: item.album.images[0].url,
-            tracName: item.name,
-            artistName: item.album.artists[0].name,
-            uri: item.uri
-          }
-          return data
-        }))
-
-      })
+            img: item.images[0]?.url,
+            trackName: item.name,
+            artistName: item.artists[0]?.name,
+            uri: item.uri,
+          })));
+        })
+        .catch(err => console.error("Error fetching albums:", err));
     }
-  }, [token])
-
-  function handlePlay(uri) {
-    setplay(uri)
-    setPlaying(true)
-  }
-
-
+  }, [token]);
+   
   return (
-    <>
-      <div className='flex overflow-x-auto justify-between gap-5 p-5'>
-        {tracksList?.map(item => (
-          <div onClick={() => handlePlay(item.uri)} key={item.id} className='min-w-[225px] cursor-pointer p-[21px] rounded-[8px] bg-[#1c1c1c]'>
-            <img className='h-[182px] mb-[25px] rounded-[8px]' src={item.img} alt="Track img" width={"100%"} />
-            <h2 className='text-white mb-2 font-bold text-[20px]'>{item.tracName}</h2>
-            <p className='text-white font-normal text-[18px] opacity-[60%]'>{item.artistName}</p>
-          </div>
+    <Suspense fallback={<img className='absolute inset-0 m-auto' src={Loading} alt='Loading...' width={100} height={100} />}>
+    <div className='p-5 '>
+      <h2 className='text-[39px] mb-[29px] text-white font-bold'>Good afternoon</h2>
+      <ul className='flex mb-[50px] gap-4 flex-wrap justify-between'>
+        {trendMusicList.map(item => (
+          <li className='flex trends-item overflow-hidden rounded-[6px] w-[48%] items-center space-x-[21px]'  key={item.id}>
+            <img className='h-[82px]' src={item.img} alt="Trend img" width={82} height={82} />
+            <h2 className='text-white font-bold text-[22px]'>{item.trackName}</h2>
+          </li>
         ))}
+      </ul>
+      <div className='p-5 '>
+          <LazyMusicLists artistName={"Konsta"} key="konsta" />
+          <MusicLists artistName={"Toxir Sodiqov"} key="toxir-sodiqov" />
+          <MusicLists artistName={"Shoxrux"} key="shoxrux" />
       </div>
-      <div className='absolute bottom-0 w-full'>
-        <SpotifyWebPlayer
-          token={token}
-          uris={play ? [play] : []}
-          play={palying}
-          callback={(e) => {
-            if (e.isPlaying) {
-              setPlaying(false)
-            }
-          }}
-        />
-      </div>
-
-    </>
-
+    </div>
+    </Suspense>
   );
 }
 
